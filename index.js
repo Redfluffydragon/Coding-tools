@@ -102,6 +102,16 @@ class ColorPicker {
       }, {once: true, useCapture: false});
     }, false);
 
+    this.showColors.parentNode.addEventListener('touchstart', e => {
+      pickColor(e);
+      document.documentElement.style.userSelect = 'none';
+      document.addEventListener('touchmove', pickColor, {passive: true, useCapture: false});
+      document.addEventListener('touchend', () => {
+        document.documentElement.style.userSelect = '';
+        document.removeEventListener('touchmove', pickColor, {passive: true, useCapture: false});
+      }, {once: true, useCapture: false});
+    }, false);
+
     this.pickCoords = {x: this.showColors.offsetWidth, y: 0}
 
     this.maxColor = [255, 0, 0];
@@ -404,8 +414,9 @@ document.addEventListener('click', e => {
  */
 function pickColor(e) {
   const getRect = colorPick.showColors.getBoundingClientRect();
-  let x = e.clientX - getRect.x;
-  let y = e.clientY - getRect.y;
+  let event = e.type.includes('mouse') ? e : e.touches[0];
+  let x = event.clientX - getRect.x;
+  let y = event.clientY - getRect.y;
 
   colorPick.colorPick.style.left = minMax(x, 0, getRect.width) - 11 + 'px';
   colorPick.colorPick.style.top = minMax(y, 0, getRect.height) - 11 + 'px';
