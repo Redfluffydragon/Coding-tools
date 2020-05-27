@@ -1,0 +1,161 @@
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  font-size: 1.3em;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
+  --main-picker-color: red;
+  --current-picker-color: 255, 0, 0;
+  --picker-opacity: 100%;
+}
+
+#mainGrid {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(50%, 1fr));
+  place-items: center;
+  background-image: radial-gradient(#575757, #a0a0a0);
+}
+
+.grid-item {
+  padding: 9px;
+  text-align: right;
+}
+
+.grid-item label {
+  display: block;
+}
+
+input, textarea, button {
+  font-size: 1.1em;
+  padding: 4px;
+  border-radius: 5px;
+  border: 1px solid gray;
+  width: 270px;
+  box-shadow: 5px 5px 15px rgb(97, 97, 97);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+input[type = range] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgb(255, 255, 255);
+  height: 9px;
+  width: 100%;
+  border-radius: 5px;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+input[type = range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: var(--main-picker-color);
+  cursor: pointer;
+}
+
+button {
+  width: auto;
+  padding: 4px 19px;
+}
+
+button:hover {
+  cursor: pointer;
+  filter: brightness(1.1);
+}
+
+#colorpicker {
+  grid-row: span 2 / auto;
+}
+
+#showColor {
+  min-width: 50px;
+  min-height: 50px;
+  background: rgb(var(--current-picker-color));
+  margin-bottom: 5px;
+}
+
+#showColors {
+  width: 300px;
+  height: 300px;
+}
+
+#showColors:after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1));
+}
+
+#colorPick {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: absolute;
+  top: -11px;
+  left: calc(100% - 11px);
+  background: rgb(var(--current-picker-color));
+  cursor: pointer;
+}
+
+#mainColor {
+  margin-top: 20px;
+  background-image: linear-gradient(90deg, red, yellow, rgb(0, 255, 0), cyan, blue, magenta, red);
+}
+
+#alphaSlider {
+  background: transparent;
+  background-image: linear-gradient(90deg, rgba(var(--current-picker-color), 0), rgba(var(--current-picker-color), 1));
+}
+
+#alphaSlider::-webkit-slider-thumb {
+  background: rgb(var(--current-picker-color));
+  opacity: var(--picker-opacity);
+}
+
+#showHex {
+  text-transform: uppercase;
+}
+
+#minifier textarea {
+  font-size: .7em;
+  resize: none;
+  width: 350px;
+  height: 45vh;
+}
+
+.clearInput {
+  background: transparent;
+  font-size: 0.8em;
+  box-shadow: none;
+  border: none;
+  width: 220px;
+}
+
+.center {
+  text-align: center;
+}
+
+.relative {
+  position: relative;
+}
+
+.minWidth {
+  width: min-content;
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css">
+  <script src="index.js" defer></script>
+  <title>Coding tools</title>
+</head>
+<body>
+  <div id="mainGrid">
+    <div id="hexToDec" class="grid-item">
+      <label>
+        Hex input
+        <input type="text" id="hexIn" pattern="\d*\.*\d*">
+      </label>
+      <br>
+      <label>
+        Dec input
+        <input type="text" id="decIn">
+      </label>
+    </div>
+
+    
+
+    <!-- <div id="minifier" class="grid-item">
+      <textarea id="minifyJs" spellcheck="false"></textarea>
+      <button id="minifyBtn">Minify</button>
+      <button id="clearBtn">Clear</button>
+      <button id="copyBtn">Copy</button>
+    </div> -->
+
+    <div id="colorpicker" class="grid-item">
+      <div id="showColor"></div>
+      <div id="shadow" class="relative minWidth">
+        <div id="showColors"></div>
+        <div id="colorPick"></div>
+      </div>
+      <input type="range" id="mainColor" value="0" min="0" max="1530">
+      <input type="range" id="alphaSlider", value="255", min="0", max="255">
+      <label>
+        RGB:
+        <input type="text" class="clearInput center" id="showRgb" value="rgb(255, 0, 0)" spellcheck="false">
+      </label>
+      <label>
+        Hex:
+        <input type="text" class="clearInput center" id="showHex" value="#FF0000" spellcheck="false">
+      </label>
+    </div>
+
+    <div id="keycode" class="grid-item">
+      <label>
+        Keycode
+        <input type="text" id="keycodeIn" class="center" readonly>
+      </label>
+      <br>
+      <label>
+        Key
+        <input type="text" id="showKey" class="center" readonly>
+      </label>
+    </div>
+  </div>
+</body>
+</html>
