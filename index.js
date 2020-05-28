@@ -3,10 +3,9 @@
 const hexIn = document.getElementById('hexIn');
 const decIn = document.getElementById('decIn');
 
+const keycode = document.getElementById('keycode');
 const keycodeIn = document.getElementById('keycodeIn');
 const showKey = document.getElementById('showKey');
-
-const minifyJs = document.getElementById('minifyJs');
 
 /**
  * Check if the currently active element matches a CSS selector
@@ -112,21 +111,22 @@ class ColorPicker {
       }, {once: true, useCapture: false});
     }, false);
 
-    this.pickCoords = {x: this.showColors.offsetWidth, y: 0}
+    this.pickCoords = {
+      x: Math.round(Math.random() * this.showColors.offsetWidth),
+      y: Math.round(Math.random() * this.showColors.offsetHeight),
+    }
+    this.setPickPos();
 
     this.maxColor = [255, 0, 0];
 
-    this.color = {
-      rgb: [255, 0, 0],
-      a: 1
-    };
+    this.color = {rgb: [255, 0, 0], a: 1};
 
     this.cSlider.addEventListener('input', () => {
       this.colorCanvas();
     });
+    this.cSlider.value = Math.round(Math.random() * this.cSlider.max);
 
     this.aSlider.addEventListener('input', () => {
-      this.showColor.style.opacity = this.aSlider.value/255*100 + '%';
       document.body.style.setProperty('--picker-opacity', this.aSlider.value/255*100 + '%');
       this.color.a = this.aSlider.value/255;
       this.showRgb.value = toRgb(this.color);
@@ -134,7 +134,7 @@ class ColorPicker {
     }, false);
         
     this.showHex.addEventListener('input', () => {
-      if (/^#?([0-9a-fA-F]{3}(?!\S))|([0-9a-fA-F]{6}(?!\S))|([0-9a-fA-F]{8}(?!\S))/.test(this.showHex.value)) {
+      if (/^#?([0-9a-f]{3}(?!\S))|([0-9a-f]{6}(?!\S))|([0-9a-f]{8}(?!\S))/i.test(this.showHex.value)) {
         const color = /[0-9a-f]{3,}/i.exec(this.showHex.value)[0];
         const colors = [];
         if (color.length === 8) { // with alpha
@@ -147,18 +147,10 @@ class ColorPicker {
           this.color.a = colors[3];
           this.displayColor();
         }
-        else if (color.length === 3) { // abbreviated 3
+        else if (color.length === 3 || color.length === 6) { // no alpha
+          const oneThird = color.length / 3;
           for (let i = 0; i < 3; i++) {
-            colors.push(parseInt(color.slice(i, i+1).repeat(2), 16));
-          }
-          this.showRgb.value = `rgb(${colors.join(', ')})`;
-          this.color.rgb = colors;
-          this.color.a = 1;
-          this.displayColor();
-        }
-        else if (color.length === 6) { // full 6
-          for (let i = 0; i < 6; i+=2) {
-            colors.push(parseInt(color.slice(i, i+2), 16));
+            colors.push(parseInt(color.slice(i*oneThird, (i + 1)*oneThird).repeat(3 - oneThird), 16));
           }
           this.showRgb.value = `rgb(${colors.join(', ')})`;
           this.color.rgb = colors;
@@ -236,12 +228,11 @@ class ColorPicker {
   /**Set the correct gradient on the colorpicker display*/
   colorCanvas(maxColor = this.maxVal(this.cSlider.value), setFromText = false) {
     this.maxColor = maxColor;
-    this.showColors.style.backgroundImage = `linear-gradient(to right, rgb(255, 255, 255), rgb(${this.maxColor}))`;
-    document.body.style.setProperty('--main-picker-color', `rgb(${this.maxColor})`); // change slider thumb color
+    document.body.style.setProperty('--main-picker-color', `rgb(${this.maxColor})`); // change slider thumb and main gradient color
 
-    if (!setFromText) {
+    if (!setFromText) { // if not set from text input
       this.color.rgb = this.calcColor(this.pickCoords.x, this.pickCoords.y);
-      document.body.style.setProperty('--current-picker-color', this.color.rgb.join(', '));
+      document.body.style.setProperty('--current-picker-color', this.color.rgb);
       this.showRgb.value = toRgb(this.color);
       this.showHex.value = toHex(this.color);
     }
@@ -250,34 +241,27 @@ class ColorPicker {
   /**Show color from this.color (for when color is set from text input)*/
   displayColor() {
     this.aSlider.value = Math.round(this.color.a*255);
-    document.body.style.setProperty('--current-picker-color', this.color.rgb.join(', '));
-    this.showColor.style.opacity = this.color.a*100 + '%';
+    document.body.style.setProperty('--current-picker-color', this.color.rgb);
     document.body.style.setProperty('--picker-opacity', this.color.a*100 + '%');
 
     const maxVal = Math.max(...this.color.rgb);
     const minVal = Math.min(...this.color.rgb);
-    const midVal = this.color.rgb.reduce((sum, cur) => sum + cur) - (maxVal + minVal);
+    const midVal = this.color.rgb.reduce((s, c) => s + c) - (maxVal + minVal);
 
-    if (!this.color.rgb.every(i => i === this.color.rgb[0])) {
-      this.maxColor = this.color.rgb;
+    if (!this.color.rgb.every(i => i === this.color.rgb[0])) { // if not white/gray/black
 
-      const newMid = midVal - minVal * ((maxVal - midVal) / (maxVal - minVal));
-      if (minVal !== 0) { // scale to right side if not already there
-        this.maxColor = this.color.rgb.map(i => {
-          if (i === minVal) {
-            return 0;
-          }
-          else if (i !== maxVal) {
-            return newMid;
-          }
-          return i;
-        });
-      }
+      this.maxColor = this.color.rgb.map(i => { // scale to right side if not already there
+        if (i === minVal) { // set min to zero
+          return 0;
+        }
+        else if (i === midVal) { // calculate new mid val
+          return midVal - minVal * ((maxVal - midVal) / (maxVal - minVal));
+        }
+        return i; // max val stays the same when going right or left
+      });
 
       const mapToMax = 255 / maxVal;
-      if (mapToMax !== 0) { // scale to top
-        this.maxColor = this.maxColor.map(i => Math.round(i * mapToMax));
-      }
+      this.maxColor = this.maxColor.map(i => Math.round(i * mapToMax)); // scale to top
       
     }
     else { // if white/gray/black, default to red
@@ -285,7 +269,7 @@ class ColorPicker {
       this.cSlider.value = 0;
     }
     
-    if (this.color.rgb.reduce((s, c) => s + c) === 0) { // put in bottom left if black
+    if (this.color.rgb.every(i => i === 0)) { // put in bottom left if black
       this.pickCoords.x = 0;
       this.pickCoords.y = this.showColors.offsetHeight;
     }
@@ -293,68 +277,55 @@ class ColorPicker {
       this.pickCoords.x = mapVal(maxVal - minVal, 0, maxVal, 0, this.showColors.offsetWidth);
       this.pickCoords.y = mapVal(255 - maxVal, 0, 255, 0, this.showColors.offsetHeight);
     }
-    this.colorPick.style.left = minMax(this.pickCoords.x, 0, this.showColors.offsetWidth) - 11 + 'px';
-    this.colorPick.style.top = minMax(this.pickCoords.y, 0, this.showColors.offsetHeight) - 11 + 'px';
+    this.setPickPos();
 
-    let highs = [];
-    let lows = [];
+    let highsIdx = [];
+    let lowsIdx = [];
     for (let [idx, item] of this.maxColor.entries()) {
       if (item === 255) {
-        highs.push(idx);
+        highsIdx.push(idx);
       }
       else if (item === 0) {
-        lows.push(idx);
+        lowsIdx.push(idx);
       }
     }
-    if (highs.length === 2) { // secondary colors
-      highs = highs.reduce((s, c) => s + c); // sum to find which highs
-      switch (highs) {
-        case 1:
-          this.cSlider.value = 255;
-        break;
-        case 3:
-          this.cSlider.value = 255*3;
-        break;
-        case 2:
-          this.cSlider.value = 255*5;
-        break;
-        default:
+    if (highsIdx.length === 2) { // secondary colors
+      highsIdx = highsIdx.reduce((s, c) => s + c); // sum to find which highs
+      if (highsIdx === 2) {
+        this.cSlider.value = 255*5;
+      }
+      else {
+        this.cSlider.value = 255 * highsIdx;
       }
     }
-    else if (lows.length === 2) { // primary colors
-      lows = lows.reduce((s, c) => s + c); //sum to find which lows
-      switch (lows) {
-        case 3:
-          this.cSlider.value = 0;
-        break;
-        case 2:
-          this.cSlider.value = 255*2;
-        break;
-        case 1:
-          this.cSlider.value = 255*4;
-        break;
-        default:
-      }
+    else if (lowsIdx.length === 2) { // primary colors
+      lowsIdx = lowsIdx.reduce((s, c) => s + c); //sum to find which lows
+      this.cSlider.value = 255 * (6 - 2 * lowsIdx); // works out nicely with a linear function
     }
-    else if (highs.length = 1) { // all other colors (I think)
-      highs = highs[0];
-      lows = lows[0];
-      let mid = this.maxColor.reduce((s, c) => s + c) - 255;
-      let midIdx = this.maxColor.indexOf(mid);
-      switch (highs) {
-        case 0:
-          this.cSlider.value = lows === 2 ? mid : 255*5 + (255 - mid);
+    else if (highsIdx.length = 1) { // all other colors
+      const highIdx = highsIdx[0]; // get the single high
+      const mid = this.maxColor.reduce((s, c) => s + c) - 255; // maxColor should be 1 zero, 1 255, and mid val
+      const midIdx = this.maxColor.indexOf(mid);
+      switch (highIdx) {
+        case 0: // orange - purple
+          this.cSlider.value = midIdx === 1 ? mid : 255*5 + (255 - mid);
         break;
-        case 1:
-          this.cSlider.value = 255*2 + (mid * (midIdx === 2 ? 1 : -1));
+        case 1: // yellow - cyan
+          this.cSlider.value = 255*2 + (midIdx === 2 ? mid : -mid); // midIdx: 0 (n) or 2 (p)
         break;
-        case 2:
-          this.cSlider.value = 255*4 + (mid === 1 ? 255 - mid : mid);
+        case 2: // cyan - purple
+          this.cSlider.value = 255*4 + (midIdx === 0 ? mid : -mid); // midIdx: 1 (n) or 0 (p)
         break;
       }
     }
 
     this.colorCanvas(this.maxColor, true);
+  }
+
+  /**Set the picker position based on colorPickCoords*/
+  setPickPos() {
+    this.colorPick.style.left = minMax(this.pickCoords.x, 0, this.showColors.offsetWidth) - 11 + 'px';
+    this.colorPick.style.top = minMax(this.pickCoords.y, 0, this.showColors.offsetHeight) - 11 + 'px';
   }
 }
 
@@ -380,7 +351,9 @@ addEventListener('keydown', e => {
     (active('#decIn') && /\D/.test(e.key))) && // dec and test dec
     e.key !== '.') || // allow decimals for number conversions
     (active('#showHex') && (/[^0-9a-f#]/i.test(e.key) || // hex color and test hex color
-    (!/#?[0-9a-f]{0,8}/i.test(colorPick.showHex.value) && colorPick.showHex.value !== '')))) { // possible number sign and up to eight hex digits
+    (!/^#?[0-9a-f]{0,8}(?!\S)/i.test(colorPick.showHex.value) &&
+    colorPick.showHex.value !== '') ||
+    colorPick.showHex.value.replace('#', '').length >= 8))) { // possible number sign and up to eight hex digits
       e.preventDefault();
     }
   }
@@ -388,25 +361,16 @@ addEventListener('keydown', e => {
 
 document.addEventListener('click', e => {
   if (e.target.closest('#keycode')) {
-    keycodeIn.focus();
-  }
-  else if (e.target.matches('#minifyBtn')) {
-    fetch(
-      'https://cors-anywhere.herokuapp.com/https://javascript-minifier.com/raw?input=' + minifyJs.value,
-      {method: 'POST'}
-    ).then(r => r.json())
-    .then(json => {
-      minifyJs.value = json;
-    })
-  }
-  else if (e.target.matches('#clearBtn')) {
-    minifyJs.value = ''; // maybe implement undo on this?
-    minifyJs.focus();
-  }
-  else if (e.target.matches('#copyBtn')) {
-    navigator.clipboard.writeText(minifyJs.value);
+    keycode.focus();
+    keycode.classList.add('focused');
   }
 }, false);
+
+keycode.addEventListener('focusout', () => {
+  keycode.classList.remove('focused');
+  keycodeIn.value = '';
+  showKey.value = '';
+})
 
 /**
  * Pick a color on the color picker
@@ -414,18 +378,16 @@ document.addEventListener('click', e => {
  */
 function pickColor(e) {
   const getRect = colorPick.showColors.getBoundingClientRect();
+  
   let event = e.type.includes('mouse') ? e : e.touches[0];
   let x = event.clientX - getRect.x;
   let y = event.clientY - getRect.y;
 
-  colorPick.colorPick.style.left = minMax(x, 0, getRect.width) - 11 + 'px';
-  colorPick.colorPick.style.top = minMax(y, 0, getRect.height) - 11 + 'px';
-  
   colorPick.pickCoords = {x: x, y: y};
+  colorPick.setPickPos();
 
-  const newColor = colorPick.calcColor(x, y);
-  colorPick.color.rgb = newColor;
-  document.body.style.setProperty('--current-picker-color', newColor.join(', '));
+  colorPick.color.rgb = colorPick.calcColor(x, y);
+  document.body.style.setProperty('--current-picker-color', colorPick.color.rgb);
   colorPick.showRgb.value = toRgb(colorPick.color);
   colorPick.showHex.value = toHex(colorPick.color);
 }
