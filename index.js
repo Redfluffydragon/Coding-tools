@@ -104,16 +104,17 @@ class ColorPicker {
     this.showColors.parentNode.addEventListener('touchstart', e => {
       pickColor(e);
       document.documentElement.style.userSelect = 'none';
-      document.addEventListener('touchmove', pickColor, {passive: true, useCapture: false});
+      // passive false so can prevent default - shouldn't be a problem because it gets removed and there's no scrolling
+      document.addEventListener('touchmove', pickColor, {passive: false, useCapture: false});
       document.addEventListener('touchend', () => {
         document.documentElement.style.userSelect = '';
-        document.removeEventListener('touchmove', pickColor, {passive: true, useCapture: false});
+        document.removeEventListener('touchmove', pickColor, {passive: false, useCapture: false});
       }, {once: true, useCapture: false});
     }, false);
 
     this.pickCoords = {
-      x: Math.round(Math.random() * this.showColors.offsetWidth),
-      y: Math.round(Math.random() * this.showColors.offsetHeight),
+      x: Math.round(Math.random() * this.showColors.offsetWidth / 2) + this.showColors.offsetWidth/2,
+      y: Math.round(Math.random() * this.showColors.offsetHeight / 2),
     }
     this.setPickPos();
 
@@ -324,8 +325,8 @@ class ColorPicker {
 
   /**Set the picker position based on colorPickCoords*/
   setPickPos() {
-    this.colorPick.style.left = minMax(this.pickCoords.x, 0, this.showColors.offsetWidth) - 11 + 'px';
-    this.colorPick.style.top = minMax(this.pickCoords.y, 0, this.showColors.offsetHeight) - 11 + 'px';
+    this.colorPick.style.left = minMax(this.pickCoords.x, 0, this.showColors.offsetWidth) + 'px';
+    this.colorPick.style.top = minMax(this.pickCoords.y, 0, this.showColors.offsetHeight) + 'px';
   }
 }
 
@@ -370,13 +371,14 @@ keycode.addEventListener('focusout', () => {
   keycode.classList.remove('focused');
   keycodeIn.value = '';
   showKey.value = '';
-})
+}, false);
 
 /**
  * Pick a color on the color picker
  * @param {Object} e 
  */
 function pickColor(e) {
+  e.preventDefault();
   const getRect = colorPick.showColors.getBoundingClientRect();
   
   let event = e.type.includes('mouse') ? e : e.touches[0];
