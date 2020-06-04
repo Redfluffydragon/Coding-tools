@@ -31,44 +31,6 @@ const mapVal = (val, fromLow, fromHigh, toLow, toHigh) => (val - fromLow) * (toH
  */
 const minMax = (val, min, max) => Math.max(Math.min(val, max), min);
 
-/**
- * Turn an RGB(A) string or array into an rgb(a) color code
- * @param {Object} color Color object
- * @param {(string|number[])} color.rgb RGB array
- * @param {string|number} color.a Alpha value
- */
-const toRgb = (color) => {
-  if (typeof color.rgb === 'string') {
-    color.rgb = color.rgb.split(/, */); // make sure there's a space after the commas
-  }
-  color.rgb = color.rgb.join(', ');
-  if (color.a != null && parseFloat(color.a) !== 1) {
-    return `rgba(${color.rgb}, ${Math.round(parseFloat(color.a)*1000)/1000})`;
-  }
-  return `rgb(${color.rgb})`;
-}
-
-/**
- * Turn an RGB(A) object into a hex color code
- * @param {Object} color Color object
- * @param {(string|number[])} color.rgb RGB array
- * @param {string|number} color.a Alpha value
- */
-const toHex = (color) => {
-  let hexCode = '#';
-  if (typeof color.rgb === 'string') {
-    color.rgb = color.rgb.split(/, */).map(i => parseInt(i));
-  }
-  for (let i of color.rgb) {
-    hexCode += ('0' + parseInt(i, 10).toString(16).toUpperCase()).slice(-2);
-  }
-  if (color.a != null) {
-    color.a = parseFloat(color.a);
-    color.a !== 1 && (hexCode += ('0' + (color.a*255).toString(16).toUpperCase()).slice(-2));
-  }
-  return hexCode;
-}
-
 class ColorPicker {
   /**
    * Create a color picker
@@ -79,8 +41,9 @@ class ColorPicker {
    * @param {string} alphaSlider 
    * @param {string} showRgb 
    * @param {string} showHex 
+   * @param {string} showHsl
    */
-  constructor(showColors, colorPick, showColor, colorSlider, alphaSlider, showRgb, showHex) {
+  constructor(showColors, colorPick, showColor, colorSlider, alphaSlider, showRgb, showHex, showHsl, showHsv) {
     this.colorPick = document.getElementById(colorPick); // color pick div that moves with cursor
     this.showColor = document.getElementById(showColor); // div to show the selected color
     this.cSlider = document.getElementById(colorSlider); // slider to select the main color
@@ -88,6 +51,8 @@ class ColorPicker {
 
     this.showRgb = document.getElementById(showRgb);
     this.showHex = document.getElementById(showHex);
+    this.showHsl = document.getElementById(showHsl);
+    this.showHsv = document.getElementById(showHsv);
 
     this.showColors = document.getElementById(showColors); // show the gradient
 
@@ -127,11 +92,12 @@ class ColorPicker {
     });
     this.cSlider.value = Math.round(Math.random() * this.cSlider.max);
 
+    this.colorCanvas();
+
     this.aSlider.addEventListener('input', () => {
       document.body.style.setProperty('--picker-opacity', this.aSlider.value/255*100 + '%');
       this.color.a = this.aSlider.value/255;
-      this.showRgb.value = toRgb(this.color);
-      this.showHex.value = toHex(this.color);
+      this.setInputs();
     }, false);
         
     this.showHex.addEventListener('input', () => {
@@ -143,50 +109,72 @@ class ColorPicker {
             colors.push(parseInt(color.slice(i, i+2), 16));
           }
           colors.push(Math.round((parseInt(color.slice(6, 8), 16)/255)*1000)/1000);
-          this.showRgb.value = `rgba(${colors.join(', ')})`;
           this.color.rgb = colors.slice(0, 3);
           this.color.a = colors[3];
           this.displayColor();
+          this.setInputs('hex');
         }
         else if (color.length === 3 || color.length === 6) { // no alpha
           const oneThird = color.length / 3;
           for (let i = 0; i < 3; i++) {
             colors.push(parseInt(color.slice(i*oneThird, (i + 1)*oneThird).repeat(3 - oneThird), 16));
           }
-          this.showRgb.value = `rgb(${colors.join(', ')})`;
           this.color.rgb = colors;
           this.color.a = 1;
           this.displayColor();
+          this.setInputs('hex');
         }
       }
     }, false);
 
-    this.showHex.addEventListener('focusout', () => {
-      this.showHex.value = toHex(this.color);
-      this.showRgb.value = toRgb(this.color);
+    this.showHex.addEventListener('focusout', () =>{
+      this.setInputs('hex');
     }, false);
 
     this.showRgb.addEventListener('input', () => {
       if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */.test(this.showRgb.value)) {
-        const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.showRgb.value)[0].split(/, */).map(i => parseInt(i));
+        const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.showRgb.value)[0].split(/, */)
+          .map((i, idx) => idx < 3 ? parseInt(i) : parseFloat(i));
 
-        if (color[3] == null) {
-          color[3] = 1;
-        }
         this.color.rgb = color.slice(0, 3);
-        this.color.a = color[3];
+        this.color.a = color[3] == null ? 1 : color[3];
 
-        this.showHex.value = toHex(this.color);
         this.displayColor();
+        this.setInputs('rgb');
       }
     }, false);
 
     this.showRgb.addEventListener('focusout', () => {
-      this.showHex.value = toHex(this.color);
-      this.showRgb.value = toRgb(this.color);
+      this.setInputs('rgb');
     }, false);
 
-    this.colorCanvas();
+    this.showHsl.addEventListener('input', () => {
+      if (/(hsl)?\(?\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsl.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsl.value)[0].split(/, */).map(i => parseInt(i));
+
+        const hsl = {
+          h: getNumbers[0],
+          s: getNumbers[1] / 100,
+          l: getNumbers[2] / 100,
+        }
+        const color = [this.hslToRgbFunc(hsl, 0), this.hslToRgbFunc(hsl, 8), this.hslToRgbFunc(hsl, 4)];
+
+        this.color.rgb = color;
+        this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
+
+        this.displayColor();
+        this.setInputs('hsl');
+      }
+    }, false);
+
+    this.showHsl.addEventListener('focusout', () => {
+      this.setInputs('hsl');
+    }, false);
+
+    this.showHsv.addEventListener('input', () => {
+
+    }, false);
+
   }
   
   /**
@@ -209,21 +197,20 @@ class ColorPicker {
 
   /**
    * Calculate the color at a point on the canvas
-   * @param {Number} x 
-   * @param {Number} y 
+   * @param {Object} coords 
+   * @param {number} maxColor 
    */
-  calcColor(x, y) {
-    x = minMax(x, 0, this.showColors.offsetWidth);
-    y = minMax(y, 0, this.showColors.offsetHeight);
-    const mapXR = mapVal(x, 0, this.showColors.offsetWidth, 255, this.maxColor[0]);
-    const mapXG = mapVal(x, 0, this.showColors.offsetWidth, 255, this.maxColor[1]);
-    const mapXB = mapVal(x, 0, this.showColors.offsetWidth, 255, this.maxColor[2]);
-    const mappedX = [mapXR, mapXG, mapXB];
+  calcColor(coords = this.pickCoords, maxColor = this.maxColor) {
+    const x = minMax(coords.x, 0, this.showColors.offsetWidth);
+    const y = minMax(coords.y, 0, this.showColors.offsetHeight);
+   
+    const mappedX = [
+      mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[0]),
+      mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[1]),
+      mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[2]),
+    ];
 
-    const mapYR = Math.round(mapVal(y, 0, this.showColors.offsetHeight, mappedX[0], 0));
-    const mapYG = Math.round(mapVal(y, 0, this.showColors.offsetHeight, mappedX[1], 0));
-    const mapYB = Math.round(mapVal(y, 0, this.showColors.offsetHeight, mappedX[2], 0));
-    return [mapYR, mapYG, mapYB];
+    return mappedX.map((item, idx)  => Math.round(mapVal(y, 0, this.showColors.offsetHeight, mappedX[idx], 0)));
   }
 
   /**Set the correct gradient on the colorpicker display*/
@@ -232,10 +219,9 @@ class ColorPicker {
     document.body.style.setProperty('--main-picker-color', `rgb(${this.maxColor})`); // change slider thumb and main gradient color
 
     if (!setFromText) { // if not set from text input
-      this.color.rgb = this.calcColor(this.pickCoords.x, this.pickCoords.y);
+      this.color.rgb = this.calcColor();
       document.body.style.setProperty('--current-picker-color', this.color.rgb);
-      this.showRgb.value = toRgb(this.color);
-      this.showHex.value = toHex(this.color);
+      this.setInputs();
     }
   }
 
@@ -328,9 +314,108 @@ class ColorPicker {
     this.colorPick.style.left = minMax(this.pickCoords.x, 0, this.showColors.offsetWidth) + 'px';
     this.colorPick.style.top = minMax(this.pickCoords.y, 0, this.showColors.offsetHeight) + 'px';
   }
+
+  /**
+   * Show current color in all text inputs except for one excluded one
+   * @param {string} exclude The input to exclude
+   */
+  setInputs(exclude = 'none') {
+    exclude !== 'rgb' && (this.showRgb.value = this.toRgb());
+    exclude !== 'hex' && (this.showHex.value = this.toHex());
+    exclude !== 'hsl' && (this.showHsl.value = this.toHsl(this.cSlider.value / this.cSlider.max));
+  }
+  
+  /**
+   * Turn an RGB(A) string or array into an rgb(a) color code
+   * @param {Object} color Color object
+   * @param {(string|number[])} color.rgb RGB array
+   * @param {string|number} color.a Alpha value
+ */
+  toRgb(color = this.color) {
+    if (typeof color.rgb === 'string') {
+      color.rgb = color.rgb.split(/, */); // make sure there's a space after the commas
+    }
+    color.rgb = color.rgb.join(', ');
+    if (color.a != null && parseFloat(color.a) !== 1) {
+      return `rgba(${color.rgb}, ${Math.round(parseFloat(color.a)*1000)/1000})`;
+    }
+    return `rgb(${color.rgb})`;
+  }
+  
+  /**
+   * Turn an RGB(A) object into a hex color code
+   * @param {Object} color Color object
+   * @param {(string|number[])} color.rgb RGB array
+   * @param {string|number} color.a Alpha value
+   */
+  toHex(color = this.color) {
+    let hexCode = '#';
+    if (typeof color.rgb === 'string') {
+      color.rgb = color.rgb.split(/, */).map(i => parseInt(i));
+    }
+    for (let i of color.rgb) {
+      hexCode += ('0' + parseInt(i, 10).toString(16).toUpperCase()).slice(-2);
+    }
+    if (color.a != null) {
+      color.a = parseFloat(color.a);
+      color.a !== 1 && (hexCode += ('0' + (color.a*255).toString(16).toUpperCase()).slice(-2));
+    }
+    return hexCode;
+  }
+
+  /**
+   * Turn an RGB(A) value into an HSL color code
+   * @param {Object} colorPicker ColorPicker object
+   */
+  toHsl(sliderVal, color = this.color) {
+    const mainColor = Math.round(sliderVal * 360);
+
+    let hue = 0;
+    const rgb = color.rgb;
+    const max = Math.max(...rgb);
+    const min = Math.min(...rgb);
+    const chroma = max - min;
+
+    if (chroma !== 0) {
+      switch (max) {
+        case rgb[0]:
+          hue = ((rgb[1] - rgb[2]) / chroma) % 6;
+        break;
+        case rgb[1]:
+          hue = ((rgb[2] - rgb[0]) / chroma) + 2;
+        break;
+        case rgb[2]:
+          hue = ((rgb[0] - rgb[1]) / chroma) + 4;
+        break;
+      }
+    }
+    hue = Math.round(hue * 60);
+    hue = Math.sign(hue) === -1 ? 360 + hue : hue;
+
+    const lightness = (max + min) / 2 / 255;
+
+    let saturation = 0;
+    if (lightness !== 0 && lightness !== 1) {
+      saturation = (chroma / (1 - Math.abs(2 * lightness - 1))) / 255;
+    }
+
+    const alpha = color.a;
+    const includeAlpha = alpha === 1 ? '' : `, ${Math.round(alpha * 100)}%`;
+
+    return `hsl(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
+  }
+
+  hslToRgbFunc(hsl, number) {
+    const k = (number + hsl.h / 30) % 12;
+    return Math.round((hsl.l - (hsl.s * Math.min(hsl.l, 1 - hsl.l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)))) * 255);
+  }
+
+  toHsv(color) {
+
+  }
 }
 
-const colorPick = new ColorPicker('showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider', 'showRgb', 'showHex');
+const colorPick = new ColorPicker('showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider', 'showRgb', 'showHex', 'showHsl', 'showHsv');
 
 hexIn.addEventListener('input', () => {
   decIn.value = isNaN(parseInt(hexIn.value, 16)) ? '' : parseInt(hexIn.value, 16);
@@ -378,18 +463,19 @@ keycode.addEventListener('focusout', () => {
  * @param {Object} e 
  */
 function pickColor(e) {
-  e.preventDefault();
+  if (e.type.includes('touch')) {
+    e.preventDefault();
+    e = e.touches[0];
+  }
   const getRect = colorPick.showColors.getBoundingClientRect();
   
-  let event = e.type.includes('mouse') ? e : e.touches[0];
-  let x = event.clientX - getRect.x;
-  let y = event.clientY - getRect.y;
-
-  colorPick.pickCoords = {x: x, y: y};
+  colorPick.pickCoords = {
+    x: minMax(e.clientX - getRect.x, 0, getRect.width),
+    y: minMax(e.clientY - getRect.y, 0, getRect.height),
+  };
   colorPick.setPickPos();
 
-  colorPick.color.rgb = colorPick.calcColor(x, y);
+  colorPick.color.rgb = colorPick.calcColor();
   document.body.style.setProperty('--current-picker-color', colorPick.color.rgb);
-  colorPick.showRgb.value = toRgb(colorPick.color);
-  colorPick.showHex.value = toHex(colorPick.color);
+  colorPick.setInputs();
 }
