@@ -149,7 +149,7 @@ class ColorPicker {
     }, false);
 
     this.showHsl.addEventListener('input', () => {
-      if (/(hsl)?\(?\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsl.value)) {
+      if (/^(hsl)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsl.value)) {
         const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsl.value)[0].split(/, */).map(i => parseInt(i));
 
         const hsl = {
@@ -157,9 +157,8 @@ class ColorPicker {
           s: getNumbers[1] / 100,
           l: getNumbers[2] / 100,
         }
-        const color = [this.hslToRgbFunc(hsl, 0), this.hslToRgbFunc(hsl, 8), this.hslToRgbFunc(hsl, 4)];
 
-        this.color.rgb = color;
+        this.color.rgb = [this.hslToRgbFunc(hsl, 0), this.hslToRgbFunc(hsl, 8), this.hslToRgbFunc(hsl, 4)];
         this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
 
         this.displayColor();
@@ -172,7 +171,20 @@ class ColorPicker {
     }, false);
 
     this.showHsv.addEventListener('input', () => {
+      if (/^(hsv)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsv.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsv.value)[0].split(/, */).map(i => parseInt(i));
+        const hsv = {
+          h: getNumbers[0],
+          s: getNumbers[1] / 100,
+          v: getNumbers[2] / 100,
+        }
 
+        this.color.rgb = [this.hsvToRgbFunc(hsv, 5), this.hsvToRgbFunc(hsv, 3), this.hsvToRgbFunc(hsv, 1)]
+        this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
+
+        this.displayColor();
+        this.setInputs('hsv');
+      }
     }, false);
 
   }
@@ -323,6 +335,7 @@ class ColorPicker {
     exclude !== 'rgb' && (this.showRgb.value = this.toRgb());
     exclude !== 'hex' && (this.showHex.value = this.toHex());
     exclude !== 'hsl' && (this.showHsl.value = this.toHsl(this.cSlider.value / this.cSlider.max));
+    exclude !== 'hsv' && (this.showHsv.value = this.toHsv(this.cSlider.value / this.cSlider.max));
   }
   
   /**
@@ -365,27 +378,25 @@ class ColorPicker {
 
   /**
    * Turn an RGB(A) value into an HSL color code
-   * @param {Object} colorPicker ColorPicker object
+   * @param {number} sliderVal A percentage for the color slider
+   * @param {Object} color A color object
    */
   toHsl(sliderVal, color = this.color) {
-    const mainColor = Math.round(sliderVal * 360);
-
     let hue = 0;
-    const rgb = color.rgb;
-    const max = Math.max(...rgb);
-    const min = Math.min(...rgb);
+    const max = Math.max(...color.rgb);
+    const min = Math.min(...color.rgb);
     const chroma = max - min;
 
     if (chroma !== 0) {
       switch (max) {
-        case rgb[0]:
-          hue = ((rgb[1] - rgb[2]) / chroma) % 6;
+        case color.rgb[0]:
+          hue = ((color.rgb[1] - color.rgb[2]) / chroma) % 6;
         break;
-        case rgb[1]:
-          hue = ((rgb[2] - rgb[0]) / chroma) + 2;
+        case color.rgb[1]:
+          hue = ((color.rgb[2] - color.rgb[0]) / chroma) + 2;
         break;
-        case rgb[2]:
-          hue = ((rgb[0] - rgb[1]) / chroma) + 4;
+        case color.rgb[2]:
+          hue = ((color.rgb[0] - color.rgb[1]) / chroma) + 4;
         break;
       }
     }
@@ -402,7 +413,7 @@ class ColorPicker {
     const alpha = color.a;
     const includeAlpha = alpha === 1 ? '' : `, ${Math.round(alpha * 100)}%`;
 
-    return `hsl(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
+    return `hsl(${Math.round(sliderVal * 360)}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
   }
 
   hslToRgbFunc(hsl, number) {
@@ -410,8 +421,24 @@ class ColorPicker {
     return Math.round((hsl.l - (hsl.s * Math.min(hsl.l, 1 - hsl.l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)))) * 255);
   }
 
-  toHsv(color) {
+  toHsv(sliderVal, color = this.color) {
+    const max = Math.max(...color.rgb);
 
+    const value = max / 255;
+
+    let saturation = 0;
+
+    if (value !== 0) {
+      saturation = ((max - Math.min(...color.rgb)) / value) / 255;
+    }
+
+    const showAlpha = color.a === 1 ? '' : `, ${Math.round(color.a * 100)}%`;
+    return `hsv(${Math.round(sliderVal * 360)}, ${Math.round(saturation * 100)}%, ${Math.round(value *100)}%${showAlpha})`
+  }
+
+  hsvToRgbFunc(hsv, number) {
+    const k = (number + (hsv.h / 60)) % 6;
+    return Math.round((hsv.v - (hsv.v * hsv.s * Math.max(0, Math.min(k, 4 - k, 1)))) * 255);
   }
 }
 
