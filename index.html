@@ -18,7 +18,7 @@
       <br>
       <label>
         Dec input
-        <input type="text" id="decIn" class="standaloneInput">
+        <input type="text" id="decIn" class="standaloneInput" pattern="[0-9]">
       </label>
     </div>
 
@@ -32,18 +32,34 @@
       <input type="range" id="alphaSlider", value="255", min="0", max="255">
       <label>
         RGB:
-        <input type="text" class="clearInput center" id="showRgb" value="rgb(255, 0, 0)" spellcheck="false">
+        <input type="text" id="showRgb" class="clearInput center" value="rgb(255, 0, 0)" spellcheck="false">
       </label>
       <label>
         Hex:
-        <input type="text" class="clearInput center" id="showHex" value="#FF0000" spellcheck="false">
+        <input type="text" id="showHex" class="clearInput center" value="#FF0000" spellcheck="false">
+      </label>
+      <label>
+        HSL:
+        <input type="text" id="showHsl" class="clearInput center" value="hsl(0, 100%, 50%)" spellcheck="false">
+      </label>
+      <label>
+        HSV:
+        <input type="text" id="showHsv" class="clearInput center" value="hsv(0, 100%, 100%)" spellcheck="false">
+      </label>
+      <label>
+        HSI:
+        <input type="text" id="showHsi" class="clearInput center" value="hsi(0, 100%, 100%)" spellcheck="false">
+      </label>
+      <label>
+        CMYK:
+        <input type="text" id="showCmyk" class="clearInput center" value="cmyk(0, 100%, 100%, 0%)" spellcheck="false">
       </label>
     </div>
 
     <div id="keycode" class="grid-item">
       <label>
         Keycode
-        <input type="text" id="keycodeIn" class="center standaloneInput" readonly>
+        <input type="text" id="keycodeIn" class="center standaloneInput">
       </label>
       <br>
       <label>
