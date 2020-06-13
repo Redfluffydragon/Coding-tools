@@ -10,6 +10,7 @@ body {
   --main-picker-color: red;
   --current-picker-color: 255, 0, 0;
   --picker-opacity: 100%;
+  --show-optionals: none;
 }
 
 #mainGrid {
@@ -27,11 +28,7 @@ body {
   padding: 9px;
 }
 
-.grid-item label {
-  display: block;
-}
-
-input, textarea, button {
+input {
   font-size: 1.1em;
   padding: 4px;
   border-radius: 5px;
@@ -63,6 +60,11 @@ input[type = range]::-webkit-slider-thumb {
   border: 2px solid white;
   background: var(--main-picker-color);
   cursor: pointer;
+}
+
+input[type = checkbox] {
+  display: none;
+  
 }
 
 #colorpicker {
@@ -108,7 +110,7 @@ input[type = range]::-webkit-slider-thumb {
 
 #mainColor {
   margin-top: 20px;
-  background-image: linear-gradient(90deg, red, yellow, rgb(0, 255, 0), cyan, blue, magenta, red);
+  background-image: linear-gradient(90deg, red, yellow, #0F0, cyan, blue, magenta, red);
 }
 
 #showColor {
@@ -125,12 +127,47 @@ input[type = range]::-webkit-slider-thumb {
   opacity: var(--picker-opacity);
 }
 
+#moreToggle {
+  font-size: 0.8em;
+  position: relative;
+}
+
+#moreToggle::before {
+  content: 'More';
+}
+
+#moreToggle::after {
+  content: '';
+  position: absolute;
+  top: 0.45em;
+  right: -0.7em;
+  height: 0.4em;
+  width: 0.4em;
+  border: 1px solid black;
+  border-width: 0 1.7px 1.7px 0;
+  transform: rotate(45deg);
+  transform-origin: 65% 65%;
+  transition: transform 0.3s;
+}
+
+#showMore:checked ~ #moreToggle::before {
+  content: 'Less';
+}
+
+#showMore:checked ~ #moreToggle::after {
+  transform: rotate(225deg);
+}
+
 #showHex {
   text-transform: uppercase;
 }
 
 #keycodeIn {
   caret-color: transparent;
+}
+
+.withChevron {
+  padding-right: 0.7em;
 }
 
 .focused {
@@ -155,6 +192,18 @@ input[type = range]::-webkit-slider-thumb {
 
 .minWidth {
   width: min-content;
+}
+
+.block {
+  display: block;
+}
+
+.optional {
+  display: var(--show-optionals);
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 @media screen and (min-width: 1000px) {
