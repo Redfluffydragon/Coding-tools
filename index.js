@@ -43,7 +43,7 @@ class ColorPicker {
    * @param {string} showHex 
    * @param {string} showHsl
    */
-  constructor(showColors, colorPick, showColor, colorSlider, alphaSlider, showRgb, showHex, showHsl, showHsv) {
+  constructor(showColors, colorPick, showColor, colorSlider, alphaSlider, showRgb, showHex, showHsl, showHsv, showHsi) {
     this.colorPick = document.getElementById(colorPick); // color pick div that moves with cursor
     this.showColor = document.getElementById(showColor); // div to show the selected color
     this.cSlider = document.getElementById(colorSlider); // slider to select the main color
@@ -53,6 +53,7 @@ class ColorPicker {
     this.showHex = document.getElementById(showHex);
     this.showHsl = document.getElementById(showHsl);
     this.showHsv = document.getElementById(showHsv);
+    this.showHsi = document.getElementById(showHsi);
 
     this.showColors = document.getElementById(showColors); // show the gradient
 
@@ -132,7 +133,7 @@ class ColorPicker {
     }, false);
 
     this.showRgb.addEventListener('input', () => {
-      if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */.test(this.showRgb.value)) {
+      if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */i.test(this.showRgb.value)) {
         const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.showRgb.value)[0].split(/, */)
           .map((i, idx) => idx < 3 ? parseInt(i) : parseFloat(i));
 
@@ -149,7 +150,7 @@ class ColorPicker {
     }, false);
 
     this.showHsl.addEventListener('input', () => {
-      if (/^(hsl)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsl.value)) {
+      if (/^(hsl)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsl.value)) {
         const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsl.value)[0].split(/, */).map(i => parseInt(i));
 
         const hsl = {
@@ -171,7 +172,7 @@ class ColorPicker {
     }, false);
 
     this.showHsv.addEventListener('input', () => {
-      if (/^(hsv)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */.test(this.showHsv.value)) {
+      if (/^(hsv)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsv.value)) {
         const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsv.value)[0].split(/, */).map(i => parseInt(i));
         const hsv = {
           h: getNumbers[0],
@@ -187,6 +188,29 @@ class ColorPicker {
       }
     }, false);
 
+    this.showHsv.addEventListener('focusout', () => {
+      this.setInputs('hsv');
+    }, false);
+
+    this.showHsi.addEventListener('input', () => {
+      if (/^(hsi)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsi.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsi.value)[0].split(/, */).map(i => parseInt(i));
+
+        this.color.rgb = this.hsiToRgbFunc({
+          h: getNumbers[0],
+          s: getNumbers[1] / 100,
+          i: getNumbers[2] / 100,
+        });
+        this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
+
+        this.displayColor();
+        this.setInputs('hsi');
+      }
+    }, false);
+
+    this.showHsi.addEventListener('focusout', () => {
+      this.setInputs('hsi');
+    }, false);
   }
   
   /**
@@ -334,8 +358,19 @@ class ColorPicker {
   setInputs(exclude = 'none') {
     exclude !== 'rgb' && (this.showRgb.value = this.toRgb());
     exclude !== 'hex' && (this.showHex.value = this.toHex());
-    exclude !== 'hsl' && (this.showHsl.value = this.toHsl(this.cSlider.value / this.cSlider.max));
-    exclude !== 'hsv' && (this.showHsv.value = this.toHsv(this.cSlider.value / this.cSlider.max));
+    exclude !== 'hsl' && (this.showHsl.value = this.toHsl());
+    exclude !== 'hsv' && (this.showHsv.value = this.toHsv());
+    exclude !== 'hsi' && (this.showHsi.value = this.toHsi());
+  }
+
+  roundHex(hex) {
+    if (!hex.includes('.')) {
+      return hex;
+    }
+    const decimal = hex.indexOf('.');
+    const sixteenths = hex.slice(decimal + 1, decimal + 2);
+    const integer = hex.slice(0, decimal);
+    return sixteenths < 8 ? integer : (parseInt(integer, 16) + 1).toString(16);
   }
   
   /**
@@ -348,11 +383,10 @@ class ColorPicker {
     if (typeof color.rgb === 'string') {
       color.rgb = color.rgb.split(/, */); // make sure there's a space after the commas
     }
-    color.rgb = color.rgb.join(', ');
     if (color.a != null && parseFloat(color.a) !== 1) {
-      return `rgba(${color.rgb}, ${Math.round(parseFloat(color.a)*1000)/1000})`;
+      return `rgba(${color.rgb.join(', ')}, ${Math.round(parseFloat(color.a)*1000)/1000})`;
     }
-    return `rgb(${color.rgb})`;
+    return `rgb(${color.rgb.join(', ')})`;
   }
   
   /**
@@ -371,7 +405,7 @@ class ColorPicker {
     }
     if (color.a != null) {
       color.a = parseFloat(color.a);
-      color.a !== 1 && (hexCode += ('0' + (color.a*255).toString(16).toUpperCase()).slice(-2));
+      color.a !== 1 && (hexCode += ('0' + this.roundHex((color.a * 255).toString(16)).toUpperCase()).slice(-2));
     }
     return hexCode;
   }
@@ -381,7 +415,9 @@ class ColorPicker {
    * @param {number} sliderVal A percentage for the color slider
    * @param {Object} color A color object
    */
-  toHsl(sliderVal, color = this.color) {
+  toHsl(slider = this.cSlider, color = this.color) {
+    const mainColor = Math.round((slider.value / slider.max) * 360);
+
     let hue = 0;
     const max = Math.max(...color.rgb);
     const min = Math.min(...color.rgb);
@@ -413,7 +449,7 @@ class ColorPicker {
     const alpha = color.a;
     const includeAlpha = alpha === 1 ? '' : `, ${Math.round(alpha * 100)}%`;
 
-    return `hsl(${Math.round(sliderVal * 360)}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
+    return `hsl(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
   }
 
   hslToRgbFunc(hsl, number) {
@@ -421,7 +457,8 @@ class ColorPicker {
     return Math.round((hsl.l - (hsl.s * Math.min(hsl.l, 1 - hsl.l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)))) * 255);
   }
 
-  toHsv(sliderVal, color = this.color) {
+  toHsv(slider = this.cSlider, color = this.color) {
+    const hue = Math.round((slider.value / slider.max) * 360);
     const max = Math.max(...color.rgb);
 
     const value = max / 255;
@@ -433,16 +470,67 @@ class ColorPicker {
     }
 
     const showAlpha = color.a === 1 ? '' : `, ${Math.round(color.a * 100)}%`;
-    return `hsv(${Math.round(sliderVal * 360)}, ${Math.round(saturation * 100)}%, ${Math.round(value *100)}%${showAlpha})`
+    return `hsv(${hue}, ${Math.round(saturation * 100)}%, ${Math.round(value *100)}%${showAlpha})`;
   }
 
   hsvToRgbFunc(hsv, number) {
     const k = (number + (hsv.h / 60)) % 6;
     return Math.round((hsv.v - (hsv.v * hsv.s * Math.max(0, Math.min(k, 4 - k, 1)))) * 255);
   }
+
+  toHsi(slider = this.cSlider, color = this.color) {
+    const mainColor = Math.round((slider.value / slider.max) * 360);
+    const intensity = color.rgb.reduce((s, c) => s + c) / 3;
+
+    let saturation = 0;
+    if (intensity !== 0) {
+      const min = Math.min(...color.rgb);
+      saturation = 1 - (min / intensity)
+    }
+
+    const showAlpha = color.a === 1 ? '' : `, ${Math.round(color.a * 100)}%`;
+    return `hsi(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(intensity / 255 * 100)}%${showAlpha})`;
+  }
+
+  hsiToRgbFunc(hsi) { // might be possible to improve later
+    const hPrime = hsi.h / 60;
+    const z = 1 - Math.abs((hPrime % 2) - 1);
+    const maxVal = (3 * hsi.i * hsi.s) / (1 + z);
+    const midVal = maxVal * z;
+    let rgb = [0, 0, 0];
+    
+    if (hPrime >= 0 && hPrime < 1) {
+      rgb = [maxVal, midVal, 0];
+    }
+    else if (hPrime >= 1 && hPrime < 2) {
+      rgb = [midVal, maxVal, 0];
+    }
+    else if (hPrime >= 2 && hPrime < 3) {
+      rgb = [0, maxVal, midVal];
+    }
+    else if (hPrime >= 3 && hPrime < 4) {
+      rgb = [0, midVal, maxVal];
+    }
+    else if (hPrime >= 4 && hPrime < 5) {
+      rgb = [midVal, 0, maxVal];
+    }
+    else if (hPrime >= 5 && hPrime < 6) {
+      rgb = [maxVal, 0, midVal];
+    }
+
+    return rgb.map(i => Math.round((i + (hsi.i * (1 - hsi.s))) * 255));
+  }
 }
 
-const colorPick = new ColorPicker('showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider', 'showRgb', 'showHex', 'showHsl', 'showHsv');
+const colorPick = new ColorPicker(
+  'showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider', 
+'showRgb', 'showHex', 'showHsl', 'showHsv', 'showHsi');
+
+document.body.style.setProperty('--show-optionals', 'none');
+document.getElementById('showMore').addEventListener('click', () => {
+  const toggle = getComputedStyle(document.body).getPropertyValue('--show-optionals') === 'none' ? 'block' : 'none';
+  document.body.style.setProperty('--show-optionals', toggle);
+}, false);
 
 hexIn.addEventListener('input', () => {
   decIn.value = isNaN(parseInt(hexIn.value, 16)) ? '' : parseInt(hexIn.value, 16);
