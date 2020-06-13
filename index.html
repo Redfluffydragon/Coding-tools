@@ -11,12 +11,12 @@
 <body>
   <div id="mainGrid">
     <div id="hexToDec" class="grid-item">
-      <label>
+      <label class="block">
         Hex input
         <input type="text" id="hexIn" class="standaloneInput">
       </label>
       <br>
-      <label>
+      <label class="block">
         Dec input
         <input type="text" id="decIn" class="standaloneInput" pattern="[0-9]">
       </label>
@@ -30,39 +30,41 @@
       </div>
       <input type="range" id="mainColor" value="0" min="0" max="1530">
       <input type="range" id="alphaSlider", value="255", min="0", max="255">
-      <label>
+      <label class="block">
         RGB:
         <input type="text" id="showRgb" class="clearInput center" value="rgb(255, 0, 0)" spellcheck="false">
       </label>
-      <label>
+      <label class="block">
         Hex:
         <input type="text" id="showHex" class="clearInput center" value="#FF0000" spellcheck="false">
       </label>
-      <label>
+      <label class="block">
         HSL:
         <input type="text" id="showHsl" class="clearInput center" value="hsl(0, 100%, 50%)" spellcheck="false">
       </label>
-      <label>
+      <label class="optional block">
         HSV:
         <input type="text" id="showHsv" class="clearInput center" value="hsv(0, 100%, 100%)" spellcheck="false">
       </label>
-      <label>
+      <label class="optional block">
         HSI:
         <input type="text" id="showHsi" class="clearInput center" value="hsi(0, 100%, 100%)" spellcheck="false">
       </label>
-      <label>
-        CMYK:
-        <input type="text" id="showCmyk" class="clearInput center" value="cmyk(0, 100%, 100%, 0%)" spellcheck="false">
-      </label>
+      <div class="center">
+        <label class="pointer withChevron">
+          <input type="checkbox" id="showMore">
+          <span id="moreToggle"></span>
+        </label>
+      </div>
     </div>
 
     <div id="keycode" class="grid-item">
-      <label>
+      <label class="block">
         Keycode
         <input type="text" id="keycodeIn" class="center standaloneInput">
       </label>
       <br>
-      <label>
+      <label class="block">
         Key
         <input type="text" id="showKey" class="center standaloneInput" readonly>
       </label>
