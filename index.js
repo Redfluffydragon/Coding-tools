@@ -131,8 +131,8 @@ class ColorPicker {
         const color = /[0-9a-f]{3,}/i.exec(this.inputs.hex.value)[0];
         const colors = [];
         if (color.length === 8) { // with alpha
-          for (let i = 0; i < 6; i+=2) {
-            colors.push(parseInt(color.slice(i, i+2), 16));
+          for (let i = 0; i < 6; i += 2) {
+            colors.push(parseInt(color.slice(i, i + 2), 16));
           }
           colors.push(Math.round((parseInt(color.slice(6, 8), 16)/255)*1000)/1000);
           this.color.rgb = colors.slice(0, 3);
@@ -143,7 +143,7 @@ class ColorPicker {
         else if (color.length === 3 || color.length === 6) { // no alpha
           const oneThird = color.length / 3;
           for (let i = 0; i < 3; i++) {
-            colors.push(parseInt(color.slice(i*oneThird, (i + 1)*oneThird).repeat(3 - oneThird), 16));
+            colors.push(parseInt(color.slice(i * oneThird, (i + 1)*oneThird).repeat(3 - oneThird), 16));
           }
           this.color.rgb = colors;
           this.color.a = 1;
