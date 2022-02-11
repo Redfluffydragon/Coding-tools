@@ -7,6 +7,8 @@ const keycode = document.getElementById('keycode');
 const keycodeIn = document.getElementById('keycodeIn');
 const showKey = document.getElementById('showKey');
 
+const charCounter = document.getElementById('charCounter');
+
 /**
  * Check if the currently active element matches a CSS selector
  * @param {String} selector 
@@ -30,6 +32,15 @@ const mapVal = (val, fromLow, fromHigh, toLow, toHigh) => (val - fromLow) * (toH
  * @param {Number} max 
  */
 const minMax = (val, min, max) => Math.max(Math.min(val, max), min);
+
+const showCharCount = () => {
+  document.getElementById('charCount').innerText = 
+    document.getElementById('noSpacesCheck').checked ?
+      charCounter.value.replace(/\s/gm, '').length :
+      charCounter.value.length;
+
+  document.getElementById('wordCount').innerText = charCounter.value.split(/\s+/).length;
+}
 
 class ColorPicker {
   /**
@@ -539,6 +550,9 @@ hexIn.addEventListener('input', () => {
 decIn.addEventListener('input', () => {
   hexIn.value = decIn.value !== '' ? parseFloat(decIn.value).toString(16) : '';
 }, false);
+
+charCounter.addEventListener('input', showCharCount, false);
+document.getElementById('noSpacesCheck').addEventListener('input', showCharCount, false);
 
 addEventListener('keydown', e => {
   if (active('#keycodeIn') || active('#showKey')) {

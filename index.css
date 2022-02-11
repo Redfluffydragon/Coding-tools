@@ -28,7 +28,7 @@ body {
   padding: 9px;
 }
 
-input {
+input[type = text], textarea {
   font-size: 1.1em;
   padding: 4px;
   border-radius: 5px;
@@ -36,6 +36,12 @@ input {
   width: 270px;
   box-shadow: 5px 5px 15px rgb(97, 97, 97);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+textarea {
+  min-height: 2em;
+  min-width: 20ch;
+  max-width: 50vw;
 }
 
 input[type = range] {
@@ -62,7 +68,7 @@ input[type = range]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-input[type = checkbox] {
+input[type = checkbox].chevron {
   display: none;
   
 }
@@ -164,6 +170,10 @@ input[type = checkbox] {
 
 #keycodeIn {
   caret-color: transparent;
+}
+
+#charCounting {
+  text-align: left;
 }
 
 .withChevron {
