@@ -74,7 +74,11 @@ input[type = checkbox].chevron {
 }
 
 #colorpicker {
-  grid-row: span 2 / auto;
+  grid-row: span 3 / auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1ch;
+  place-items: center;
 }
 
 #showColor {
