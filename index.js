@@ -68,7 +68,7 @@ class ColorPicker {
       hsi: document.getElementById(showHsi),
     }
 
-    this.showColors = document.getElementById(showColors); // show the gradient
+    this.showColors = document.getElementById(showColors); // for showing the gradient
 
     this.showColors.parentNode.addEventListener('mousedown', e => {
       pickColor(e);
