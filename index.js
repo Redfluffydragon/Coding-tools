@@ -176,7 +176,7 @@ class ColorPicker {
           l: getNumbers[2] / 100,
         }
 
-        this.color.rgb = [this.hslToRgbFunc(hsl, 0), this.hslToRgbFunc(hsl, 8), this.hslToRgbFunc(hsl, 4)];
+        this.color.rgb = [this.hslToRgb(hsl, 0), this.hslToRgb(hsl, 8), this.hslToRgb(hsl, 4)];
         this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
 
         this.displayColor();
@@ -193,7 +193,7 @@ class ColorPicker {
           v: getNumbers[2] / 100,
         }
 
-        this.color.rgb = [this.hsvToRgbFunc(hsv, 5), this.hsvToRgbFunc(hsv, 3), this.hsvToRgbFunc(hsv, 1)]
+        this.color.rgb = [this.hsvToRgb(hsv, 5), this.hsvToRgb(hsv, 3), this.hsvToRgb(hsv, 1)]
         this.color.a = getNumbers[3] == null ? 1 : getNumbers[3];
 
         this.displayColor();
@@ -205,7 +205,7 @@ class ColorPicker {
       if (/^(hsi)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.inputs.hsi.value)) {
         const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.inputs.hsi.value)[0].split(/, */).map(i => parseInt(i));
 
-        this.color.rgb = this.hsiToRgbFunc({
+        this.color.rgb = this.hsiToRgb({
           h: getNumbers[0],
           s: getNumbers[1] / 100,
           i: getNumbers[2] / 100,
@@ -457,7 +457,7 @@ class ColorPicker {
     return `hsl(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%${includeAlpha})`;
   }
 
-  hslToRgbFunc(hsl, number) {
+  hslToRgb(hsl, number) {
     const k = (number + hsl.h / 30) % 12;
     return Math.round((hsl.l - (hsl.s * Math.min(hsl.l, 1 - hsl.l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)))) * 255);
   }
@@ -478,7 +478,7 @@ class ColorPicker {
     return `hsv(${hue}, ${Math.round(saturation * 100)}%, ${Math.round(value *100)}%${showAlpha})`;
   }
 
-  hsvToRgbFunc(hsv, number) {
+  hsvToRgb(hsv, number) {
     const k = (number + (hsv.h / 60)) % 6;
     return Math.round((hsv.v - (hsv.v * hsv.s * Math.max(0, Math.min(k, 4 - k, 1)))) * 255);
   }
@@ -497,7 +497,7 @@ class ColorPicker {
     return `hsi(${mainColor}, ${Math.round(saturation * 100)}%, ${Math.round(intensity / 255 * 100)}%${showAlpha})`;
   }
 
-  hsiToRgbFunc(hsi) { // might be possible to improve later
+  hsiToRgb(hsi) { // might be possible to improve later
     const hPrime = hsi.h / 60;
     const z = 1 - Math.abs((hPrime % 2) - 1);
     const maxVal = (3 * hsi.i * hsi.s) / (1 + z);
