@@ -60,11 +60,13 @@ class ColorPicker {
     this.cSlider = document.getElementById(colorSlider); // slider to select the main color
     this.aSlider = document.getElementById(alphaSlider); // slider to select alpha
 
-    this.showRgb = document.getElementById(showRgb);
-    this.showHex = document.getElementById(showHex);
-    this.showHsl = document.getElementById(showHsl);
-    this.showHsv = document.getElementById(showHsv);
-    this.showHsi = document.getElementById(showHsi);
+    this.inputs = {
+      rgb: document.getElementById(showRgb),
+      hex: document.getElementById(showHex),
+      hsl: document.getElementById(showHsl),
+      hsv: document.getElementById(showHsv),
+      hsi: document.getElementById(showHsi),
+    }
 
     this.showColors = document.getElementById(showColors); // show the gradient
 
@@ -111,10 +113,22 @@ class ColorPicker {
       this.color.a = this.aSlider.value/255;
       this.setInputs();
     }, false);
-        
-    this.showHex.addEventListener('input', () => {
-      if (/^#?([0-9a-f]{3}(?!\S))|([0-9a-f]{6}(?!\S))|([0-9a-f]{8}(?!\S))/i.test(this.showHex.value)) {
-        const color = /[0-9a-f]{3,}/i.exec(this.showHex.value)[0];
+
+    for (const color in this.inputs) {
+      this.inputs[color].addEventListener('contextmenu', e => {
+        e.preventDefault();
+        e.target.select();
+        navigator.clipboard.writeText(e.target.value);
+      }, false);
+
+      this.inputs[color].addEventListener('focusout', () => {
+        this.setInputs(color);
+      }, false);
+    }
+
+    this.inputs.hex.addEventListener('input', () => {
+      if (/^#?([0-9a-f]{3}(?!\S))|([0-9a-f]{6}(?!\S))|([0-9a-f]{8}(?!\S))/i.test(this.inputs.hex.value)) {
+        const color = /[0-9a-f]{3,}/i.exec(this.inputs.hex.value)[0];
         const colors = [];
         if (color.length === 8) { // with alpha
           for (let i = 0; i < 6; i+=2) {
@@ -139,13 +153,9 @@ class ColorPicker {
       }
     }, false);
 
-    this.showHex.addEventListener('focusout', () =>{
-      this.setInputs('hex');
-    }, false);
-
-    this.showRgb.addEventListener('input', () => {
-      if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */i.test(this.showRgb.value)) {
-        const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.showRgb.value)[0].split(/, */)
+    this.inputs.rgb.addEventListener('input', () => {
+      if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */i.test(this.inputs.rgb.value)) {
+        const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.inputs.rgb.value)[0].split(/, */)
           .map((i, idx) => idx < 3 ? parseInt(i) : parseFloat(i));
 
         this.color.rgb = color.slice(0, 3);
@@ -156,13 +166,9 @@ class ColorPicker {
       }
     }, false);
 
-    this.showRgb.addEventListener('focusout', () => {
-      this.setInputs('rgb');
-    }, false);
-
-    this.showHsl.addEventListener('input', () => {
-      if (/^(hsl)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsl.value)) {
-        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsl.value)[0].split(/, */).map(i => parseInt(i));
+    this.inputs.hsl.addEventListener('input', () => {
+      if (/^(hsl)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.inputs.hsl.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.inputs.hsl.value)[0].split(/, */).map(i => parseInt(i));
 
         const hsl = {
           h: getNumbers[0],
@@ -178,13 +184,9 @@ class ColorPicker {
       }
     }, false);
 
-    this.showHsl.addEventListener('focusout', () => {
-      this.setInputs('hsl');
-    }, false);
-
-    this.showHsv.addEventListener('input', () => {
-      if (/^(hsv)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsv.value)) {
-        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsv.value)[0].split(/, */).map(i => parseInt(i));
+    this.inputs.hsv.addEventListener('input', () => {
+      if (/^(hsv)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.inputs.hsv.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.inputs.hsv.value)[0].split(/, */).map(i => parseInt(i));
         const hsv = {
           h: getNumbers[0],
           s: getNumbers[1] / 100,
@@ -199,13 +201,9 @@ class ColorPicker {
       }
     }, false);
 
-    this.showHsv.addEventListener('focusout', () => {
-      this.setInputs('hsv');
-    }, false);
-
-    this.showHsi.addEventListener('input', () => {
-      if (/^(hsi)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.showHsi.value)) {
-        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.showHsi.value)[0].split(/, */).map(i => parseInt(i));
+    this.inputs.hsi.addEventListener('input', () => {
+      if (/^(hsi)?\(?\d{1,3}°?, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?\)? */i.test(this.inputs.hsi.value)) {
+        const getNumbers = /\d{1,3}, *\d{1,3}%, *\d{1,3}%(, *\d{1,3}%)?/.exec(this.inputs.hsi.value)[0].split(/, */).map(i => parseInt(i));
 
         this.color.rgb = this.hsiToRgbFunc({
           h: getNumbers[0],
@@ -217,10 +215,6 @@ class ColorPicker {
         this.displayColor();
         this.setInputs('hsi');
       }
-    }, false);
-
-    this.showHsi.addEventListener('focusout', () => {
-      this.setInputs('hsi');
     }, false);
   }
   
@@ -367,11 +361,11 @@ class ColorPicker {
    * @param {string} exclude The input to exclude
    */
   setInputs(exclude = 'none') {
-    exclude !== 'rgb' && (this.showRgb.value = this.toRgb());
-    exclude !== 'hex' && (this.showHex.value = this.toHex());
-    exclude !== 'hsl' && (this.showHsl.value = this.toHsl());
-    exclude !== 'hsv' && (this.showHsv.value = this.toHsv());
-    exclude !== 'hsi' && (this.showHsi.value = this.toHsi());
+    exclude !== 'rgb' && (this.inputs.rgb.value = this.toRgb());
+    exclude !== 'hex' && (this.inputs.hex.value = this.toHex());
+    exclude !== 'hsl' && (this.inputs.hsl.value = this.toHsl());
+    exclude !== 'hsv' && (this.inputs.hsv.value = this.toHsv());
+    exclude !== 'hsi' && (this.inputs.hsi.value = this.toHsi());
   }
 
   roundHex(hex) {
@@ -566,9 +560,9 @@ addEventListener('keydown', e => {
     (active('#decIn') && /\D/.test(e.key))) && // dec and test dec
     e.key !== '.') || // allow decimals for number conversions
     (active('#showHex') && (/[^0-9a-f#]/i.test(e.key) || // hex color and test hex color
-    (!/^#?[0-9a-f]{0,8}(?!\S)/i.test(colorPick.showHex.value) &&
-    colorPick.showHex.value !== '') ||
-    colorPick.showHex.value.replace('#', '').length >= 8))) { // possible number sign and up to eight hex digits
+    (!/^#?[0-9a-f]{0,8}(?!\S)/i.test(colorPick.inputs.hex.value) &&
+    colorPick.inputs.hex.value !== '') ||
+    colorPick.inputs.hex.value.replace('#', '').length >= 8))) { // possible number sign and up to eight hex digits
       e.preventDefault();
     }
   }
