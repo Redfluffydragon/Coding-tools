@@ -78,8 +78,8 @@ input[type = checkbox].chevron {
 }
 
 #showColor {
-  min-width: 50px;
   min-height: 50px;
+  width: 300px;
   background: rgb(var(--current-picker-color));
   margin-bottom: 5px;
 }
