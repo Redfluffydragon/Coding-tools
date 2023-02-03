@@ -34,7 +34,7 @@ const mapVal = (val, fromLow, fromHigh, toLow, toHigh) => (val - fromLow) * (toH
 const minMax = (val, min, max) => Math.max(Math.min(val, max), min);
 
 const showCharCount = () => {
-  document.getElementById('charCount').innerText = 
+  document.getElementById('charCount').innerText =
     document.getElementById('noSpacesCheck').checked ?
       charCounter.value.replace(/\s/gm, '').length :
       charCounter.value.length;
@@ -73,33 +73,33 @@ class ColorPicker {
     this.showColors.parentNode.addEventListener('mousedown', e => {
       pickColor(e);
       document.documentElement.style.userSelect = 'none';
-      document.addEventListener('mousemove', pickColor, {passive: true, useCapture: false});
+      document.addEventListener('mousemove', pickColor, { passive: true, useCapture: false });
       document.addEventListener('mouseup', () => {
         document.documentElement.style.userSelect = '';
-        document.removeEventListener('mousemove', pickColor, {passive: true, useCapture: false});
-      }, {once: true, useCapture: false});
+        document.removeEventListener('mousemove', pickColor, { passive: true, useCapture: false });
+      }, { once: true, useCapture: false });
     }, false);
 
     this.showColors.parentNode.addEventListener('touchstart', e => {
       pickColor(e);
       document.documentElement.style.userSelect = 'none';
       // passive false so can prevent default - shouldn't be a problem because it gets removed and there's no scrolling
-      document.addEventListener('touchmove', pickColor, {passive: false, useCapture: false});
+      document.addEventListener('touchmove', pickColor, { passive: false, useCapture: false });
       document.addEventListener('touchend', () => {
         document.documentElement.style.userSelect = '';
-        document.removeEventListener('touchmove', pickColor, {passive: false, useCapture: false});
-      }, {once: true, useCapture: false});
+        document.removeEventListener('touchmove', pickColor, { passive: false, useCapture: false });
+      }, { once: true, useCapture: false });
     }, false);
 
     this.pickCoords = {
-      x: Math.round(Math.random() * this.showColors.offsetWidth / 2) + this.showColors.offsetWidth/2,
+      x: Math.round(Math.random() * this.showColors.offsetWidth / 2) + this.showColors.offsetWidth / 2,
       y: Math.round(Math.random() * this.showColors.offsetHeight / 2),
     }
     this.setPickPos();
 
     this.maxColor = [255, 0, 0];
 
-    this.color = {rgb: [255, 0, 0], a: 1};
+    this.color = { rgb: [255, 0, 0], a: 1 };
 
     this.cSlider.addEventListener('input', () => {
       this.colorCanvas();
@@ -109,8 +109,8 @@ class ColorPicker {
     this.colorCanvas();
 
     this.aSlider.addEventListener('input', () => {
-      document.body.style.setProperty('--picker-opacity', this.aSlider.value/255*100 + '%');
-      this.color.a = this.aSlider.value/255;
+      document.body.style.setProperty('--picker-opacity', this.aSlider.value / 255 * 100 + '%');
+      this.color.a = this.aSlider.value / 255;
       this.setInputs();
     }, false);
 
@@ -134,7 +134,7 @@ class ColorPicker {
           for (let i = 0; i < 6; i += 2) {
             colors.push(parseInt(color.slice(i, i + 2), 16));
           }
-          colors.push(Math.round((parseInt(color.slice(6, 8), 16)/255)*1000)/1000);
+          colors.push(Math.round((parseInt(color.slice(6, 8), 16) / 255) * 1000) / 1000);
           this.color.rgb = colors.slice(0, 3);
           this.color.a = colors[3];
           this.displayColor();
@@ -143,7 +143,7 @@ class ColorPicker {
         else if (color.length === 3 || color.length === 6) { // no alpha
           const oneThird = color.length / 3;
           for (let i = 0; i < 3; i++) {
-            colors.push(parseInt(color.slice(i * oneThird, (i + 1)*oneThird).repeat(3 - oneThird), 16));
+            colors.push(parseInt(color.slice(i * oneThird, (i + 1) * oneThird).repeat(3 - oneThird), 16));
           }
           this.color.rgb = colors;
           this.color.a = 1;
@@ -154,7 +154,7 @@ class ColorPicker {
     }, false);
 
     this.inputs.rgb.addEventListener('input', () => {
-      if(/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */i.test(this.inputs.rgb.value)) {
+      if (/^(rgb(a?))?\(?\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?\)? */i.test(this.inputs.rgb.value)) {
         const color = /\d{1,3}, *\d{1,3}, *\d{1,3}(, \d?(\.\d*)?)?/.exec(this.inputs.rgb.value)[0].split(/, */)
           .map((i, idx) => idx < 3 ? parseInt(i) : parseFloat(i));
 
@@ -217,13 +217,13 @@ class ColorPicker {
       }
     }, false);
   }
-  
+
   /**
    * Take an input from the main color slider and turn it into the main color to display in the color picker
    * @param {number} sliderVal 
    */
   maxVal(sliderVal) {
-    const which255 = Math.trunc(sliderVal/255);
+    const which255 = Math.trunc(sliderVal / 255);
     const upDown = !(which255 % 2); // updown === false -> down
     const modColor = 2 - ((which255 + 1) % 3);
     const offset = upDown ? 0 : 255;
@@ -244,14 +244,14 @@ class ColorPicker {
   calcColor(coords = this.pickCoords, maxColor = this.maxColor) {
     const x = minMax(coords.x, 0, this.showColors.offsetWidth);
     const y = minMax(coords.y, 0, this.showColors.offsetHeight);
-   
+
     const mappedX = [
       mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[0]),
       mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[1]),
       mapVal(x, 0, this.showColors.offsetWidth, 255, maxColor[2]),
     ];
 
-    return mappedX.map((item, idx)  => Math.round(mapVal(y, 0, this.showColors.offsetHeight, mappedX[idx], 0)));
+    return mappedX.map(x => Math.round(mapVal(y, 0, this.showColors.offsetHeight, x, 0)));
   }
 
   /**Set the correct gradient on the colorpicker display*/
@@ -268,9 +268,9 @@ class ColorPicker {
 
   /**Show color from this.color (for when color is set from text input)*/
   displayColor() {
-    this.aSlider.value = Math.round(this.color.a*255);
+    this.aSlider.value = Math.round(this.color.a * 255);
     document.body.style.setProperty('--current-picker-color', this.color.rgb);
-    document.body.style.setProperty('--picker-opacity', this.color.a*100 + '%');
+    document.body.style.setProperty('--picker-opacity', this.color.a * 100 + '%');
 
     const maxVal = Math.max(...this.color.rgb);
     const minVal = Math.min(...this.color.rgb);
@@ -290,13 +290,13 @@ class ColorPicker {
 
       const mapToMax = 255 / maxVal;
       this.maxColor = this.maxColor.map(i => Math.round(i * mapToMax)); // scale to top
-      
+
     }
     else { // if white/gray/black, default to red
       this.maxColor = [255, 0, 0];
       this.cSlider.value = 0;
     }
-    
+
     if (this.color.rgb.every(i => i === 0)) { // put in bottom left if black
       this.pickCoords.x = 0;
       this.pickCoords.y = this.showColors.offsetHeight;
@@ -320,7 +320,7 @@ class ColorPicker {
     if (highsIdx.length === 2) { // secondary colors
       highsIdx = highsIdx.reduce((s, c) => s + c); // sum to find which highs
       if (highsIdx === 2) {
-        this.cSlider.value = 255*5;
+        this.cSlider.value = 255 * 5;
       }
       else {
         this.cSlider.value = 255 * highsIdx;
@@ -336,14 +336,14 @@ class ColorPicker {
       const midIdx = this.maxColor.indexOf(mid);
       switch (highIdx) {
         case 0: // orange - purple
-          this.cSlider.value = midIdx === 1 ? mid : 255*5 + (255 - mid);
-        break;
+          this.cSlider.value = midIdx === 1 ? mid : 255 * 5 + (255 - mid);
+          break;
         case 1: // yellow - cyan
-          this.cSlider.value = 255*2 + (midIdx === 2 ? mid : -mid); // midIdx: 0 (n) or 2 (p)
-        break;
+          this.cSlider.value = 255 * 2 + (midIdx === 2 ? mid : -mid); // midIdx: 0 (n) or 2 (p)
+          break;
         case 2: // cyan - purple
-          this.cSlider.value = 255*4 + (midIdx === 0 ? mid : -mid); // midIdx: 1 (n) or 0 (p)
-        break;
+          this.cSlider.value = 255 * 4 + (midIdx === 0 ? mid : -mid); // midIdx: 1 (n) or 0 (p)
+          break;
       }
     }
 
@@ -358,7 +358,7 @@ class ColorPicker {
 
   /**
    * Show current color in all text inputs except for one excluded one
-   * @param {string} exclude The input to exclude
+   * @param {'rgb'|'hex'|'hsl'|'hsv'|'hsi'} exclude The input to exclude
    */
   setInputs(exclude = 'none') {
     exclude !== 'rgb' && (this.inputs.rgb.value = this.toRgb());
@@ -377,7 +377,7 @@ class ColorPicker {
     const integer = hex.slice(0, decimal);
     return sixteenths < 8 ? integer : (parseInt(integer, 16) + 1).toString(16);
   }
-  
+
   /**
    * Turn an RGB(A) string or array into an rgb(a) color code
    * @param {Object} color Color object
@@ -389,11 +389,11 @@ class ColorPicker {
       color.rgb = color.rgb.split(/, */); // make sure there's a space after the commas
     }
     if (color.a != null && parseFloat(color.a) !== 1) {
-      return `rgba(${color.rgb.join(', ')}, ${Math.round(parseFloat(color.a)*1000)/1000})`;
+      return `rgba(${color.rgb.join(', ')}, ${Math.round(parseFloat(color.a) * 1000) / 1000})`;
     }
     return `rgb(${color.rgb.join(', ')})`;
   }
-  
+
   /**
    * Turn an RGB(A) object into a hex color code
    * @param {Object} color Color object
@@ -432,13 +432,13 @@ class ColorPicker {
       switch (max) {
         case color.rgb[0]:
           hue = ((color.rgb[1] - color.rgb[2]) / chroma) % 6;
-        break;
+          break;
         case color.rgb[1]:
           hue = ((color.rgb[2] - color.rgb[0]) / chroma) + 2;
-        break;
+          break;
         case color.rgb[2]:
           hue = ((color.rgb[0] - color.rgb[1]) / chroma) + 4;
-        break;
+          break;
       }
     }
     hue = Math.round(hue * 60);
@@ -475,7 +475,7 @@ class ColorPicker {
     }
 
     const showAlpha = color.a === 1 ? '' : `, ${Math.round(color.a * 100)}%`;
-    return `hsv(${hue}, ${Math.round(saturation * 100)}%, ${Math.round(value *100)}%${showAlpha})`;
+    return `hsv(${hue}, ${Math.round(saturation * 100)}%, ${Math.round(value * 100)}%${showAlpha})`;
   }
 
   hsvToRgb(hsv, number) {
@@ -503,7 +503,7 @@ class ColorPicker {
     const maxVal = (3 * hsi.i * hsi.s) / (1 + z);
     const midVal = maxVal * z;
     let rgb = [0, 0, 0];
-    
+
     if (hPrime >= 0 && hPrime < 1) {
       rgb = [maxVal, midVal, 0];
     }
@@ -528,8 +528,8 @@ class ColorPicker {
 }
 
 const colorPick = new ColorPicker(
-  'showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider', 
-'showRgb', 'showHex', 'showHsl', 'showHsv', 'showHsi');
+  'showColors', 'colorPick', 'showColor', 'mainColor', 'alphaSlider',
+  'showRgb', 'showHex', 'showHsl', 'showHsv', 'showHsi');
 
 document.body.style.setProperty('--show-optionals', 'none');
 document.getElementById('showMore').addEventListener('click', () => {
@@ -556,13 +556,13 @@ addEventListener('keydown', e => {
   }
   if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1) {
     if (
-    (((active('#hexIn') && /[^0-9a-f]/i.test(e.key)) || // hex and test hex
-    (active('#decIn') && /\D/.test(e.key))) && // dec and test dec
-    e.key !== '.') || // allow decimals for number conversions
-    (active('#showHex') && (/[^0-9a-f#]/i.test(e.key) || // hex color and test hex color
-    (!/^#?[0-9a-f]{0,8}(?!\S)/i.test(colorPick.inputs.hex.value) &&
-    colorPick.inputs.hex.value !== '') ||
-    colorPick.inputs.hex.value.replace('#', '').length >= 8))) { // possible number sign and up to eight hex digits
+      (((active('#hexIn') && /[^0-9a-f]/i.test(e.key)) || // hex and test hex
+        (active('#decIn') && /\D/.test(e.key))) && // dec and test dec
+        e.key !== '.') || // allow decimals for number conversions
+      (active('#showHex') && (/[^0-9a-f#]/i.test(e.key) || // hex color and test hex color
+        (!/^#?[0-9a-f]{0,8}(?!\S)/i.test(colorPick.inputs.hex.value) &&
+          colorPick.inputs.hex.value !== '') ||
+        colorPick.inputs.hex.value.replace('#', '').length >= 8))) { // possible number sign and up to eight hex digits
       e.preventDefault();
     }
   }
@@ -572,6 +572,11 @@ document.addEventListener('click', e => {
   if (e.target.closest('#keycode')) {
     keycode.focus();
     keycode.classList.add('focused');
+  }
+  else if (e.target.matches('#clearCounterBtn')) {
+    charCounter.value = '';
+    document.getElementById('wordCount').innerText = '';
+    document.getElementById('charCount').innerText = '';
   }
 }, false);
 
@@ -591,7 +596,7 @@ function pickColor(e) {
     e = e.touches[0];
   }
   const getRect = colorPick.showColors.getBoundingClientRect();
-  
+
   colorPick.pickCoords = {
     x: minMax(e.clientX - getRect.x, 0, getRect.width),
     y: minMax(e.clientY - getRect.y, 0, getRect.height),
